@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { server } from "socket.io";
 import { engine } from "express-handlebars";
+import mongoose from "mongoose";
 
 import viewsRouter from "./routes/views.router.js"
 import productsRouter from "./routes/api/products.router.js"

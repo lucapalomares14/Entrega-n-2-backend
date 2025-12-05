@@ -1,36 +1,42 @@
 import { Router } from "express";
-import ProductManager from "../../managers/ProductManager.js";
+import Product from "../../models/product.model.js";
 
 const router = Router();
-const pm = new ProductManager();
-
 
 router.get("/", async (req, res) => {
-    const products = await pm.getProducts();
-    res.send(products);
-});
+  try {
+    const { limit = 10, page = 1, sort, query } = req.query;
 
-router.get("/:pid", async (req, res) => {
-    const id = parseInt(req.params.pid);
-    const product = await pm.getProductById(id);
+    const filter = query ? { category: query } : {};
 
-    if (!product) {
-        return res.status(404).send({ error: "Producto no encontrado" });
-    }
+    const options = {
+      limit: parseInt(limit),
+      page: parseInt(page),
+      sort: sort ? { price: sort === "asc" ? 1 : -1 } : {}
+    };
 
-    res.send(product);
-});
+    const result = await Product.paginate(filter, options);
 
-router.post("/", async (req, res) => {
-    const newProduct = req.body;
-    const result = await pm.addProduct(newProduct);
-    res.send(result);
-});
+    res.send({
+      status: "success",
+      payload: result.docs,
+      totalPages: result.totalPages,
+      prevPage: result.prevPage,
+      nextPage: result.nextPage,
+      page: result.page,
+      hasPrevPage: result.hasPrevPage,
+      hasNextPage: result.hasNextPage,
+      prevLink: result.hasPrevPage
+        ? `http://localhost:8080/api/products?page=${result.prevPage}`
+        : null,
+      nextLink: result.hasNextPage
+        ? `http://localhost:8080/api/products?page=${result.nextPage}`
+        : null,
+    });
 
-router.delete("/:pid", async (req, res) => {
-    const id = parseInt(req.params.pid);
-    const result = await pm.deleteProduct(id);
-    res.send(result);
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message });
+  }
 });
 
 export default router;

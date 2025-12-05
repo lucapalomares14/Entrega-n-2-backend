@@ -1,23 +1,65 @@
 import { Router } from "express";
-import CartManager from "../../managers/CartManager.js";
+import Cart from "../../models/cart.model.js";
 
-const router= Router();
-const cm = new CartManager();
+const router = Router();
 
-router.post("/", async (req, res) =>{
-    const cart = await cm.createCart();
-    res.status(201).json(cart);
+
+router.delete("/:cid/products/:pid", async(req, res) => {
+  const { cid, pid } = req.params;
+
+  const cart = await Cart.findById(cid);
+
+  cart.products = cart.products.filter(p => p.product.toString() !== pid);
+
+  await cart.save();
+
+  res.send({ status: "success", cart });
 });
 
-router.get("/:cid", async (req, res) =>{
-    const cart = await cm.getCartById(req.params.cid);
-    if (!cart) return res.status(404).json({error: "Carrito no encontrado"});
-    res.json(cart.products);
+
+router.put("/:cid", async(req, res) => {
+  const { cid } = req.params;
+  const { products } = req.body;
+
+  const cart = await Cart.findByIdAndUpdate(cid, { products }, { new: true });
+
+  res.send({ status: "success", cart });
 });
 
-router.post("/:cid/product/:pid" ,async (req, res) =>{
-    const updatedCart = await cm.addProductToCart(req.params.cid, req.params.pid);
-    if (!updatedCart) return res.status(404).json({error: "Carrito no encontrado"});
 
-}); 
+router.put("/:cid/products/:pid", async(req, res) => {
+  const { cid, pid } = req.params;
+  const { quantity } = req.body;
+
+  const cart = await Cart.findById(cid);
+
+  const product = cart.products.find(p => p.product.toString() === pid);
+  product.quantity = quantity;
+
+  await cart.save();
+
+  res.send({ status: "success", cart });
+});
+
+
+router.delete("/:cid", async(req, res) => {
+  const { cid } = req.params;
+
+  const cart = await Cart.findById(cid);
+  cart.products = [];
+
+  await cart.save();
+
+  res.send({ status: "success", cart });
+});
+
+
+router.get("/:cid", async(req, res) => {
+  const { cid } = req.params;
+
+  const cart = await Cart.findById(cid).populate("products.product");
+
+  res.send({ status: "success", cart });
+});
+
 export default router;
