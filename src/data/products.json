@@ -1,0 +1,15 @@
+[
+    {
+        "id":1,
+        "title": "Producto",
+        "description": "Descripcion",
+        "code": "EX001",
+        "price": 100,
+        "status": true,
+        "stock": 10,
+        "category":"general",
+        "thumbnails": []
+
+
+    }
+]
