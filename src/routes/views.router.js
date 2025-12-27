@@ -1,25 +1,29 @@
 import { Router } from "express";
 import ProductManager from "../managers/ProductManager.js";
+import Product from "../models/product.model.js";
 
 const router = Router();
 const pm = new ProductManager();
 
-router.get("/", async (req ,res) =>{
-    const products = await pm.getAll();
-    res.render("home", {products});
+
+router.get("/", async (req, res) => {
+  const products = await pm.getAll();
+  res.render("home", { products });
 });
 
-router.get("/realtimeproducts", async (req, res) =>{
-    const products = await pm.getAll();
-    res.render("realTimeProducts", {products});
+
+router.get("/realtimeproducts", async (req, res) => {
+  const products = await pm.getAll();
+  res.render("realTimeProducts", { products });
 });
 
-export default router;
 
-router.get("/products", async(req, res) => {
-  const { limit, page, sort, query } = req.query;
+router.get("/products", async (req, res) => {
+  const { limit = 10, page = 1 } = req.query;
 
-  const result = await Product.paginate({}, { limit: 10, page: 1 });
+  const result = await Product.paginate({}, { limit, page });
+  
+  
 
   res.render("products", {
     products: result.docs,
@@ -31,3 +35,8 @@ router.get("/products", async(req, res) => {
     nextLink: result.hasNextPage ? `/products?page=${result.nextPage}` : null
   });
 });
+
+
+
+
+export default router;

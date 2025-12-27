@@ -4,36 +4,77 @@ import Cart from "../../models/cart.model.js";
 const router = Router();
 
 
-router.delete("/:cid/products/:pid", async(req, res) => {
+router.post("/", async (req, res) => {
+  try {
+    const newCart = await Cart.create({ products: [] });
+    res.status(201).send({ status: "success", cart: newCart });
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message });
+  }
+});
+
+
+router.post("/:cid/products/:pid", async (req, res) => {
+  try {
+    const { cid, pid } = req.params;
+
+    const cart = await Cart.findById(cid);
+
+    const productInCart = cart.products.find(
+      p => p.product.toString() === pid
+    );
+
+    if (productInCart) {
+      productInCart.quantity += 1;
+    } else {
+      cart.products.push({ product: pid, quantity: 1 });
+    }
+
+    await cart.save();
+
+    res.send({ status: "success", cart });
+  } catch (error) {
+    res.status(500).send({ status: "error", error: error.message });
+  }
+});
+
+router.delete("/:cid/products/:pid", async (req, res) => {
   const { cid, pid } = req.params;
 
   const cart = await Cart.findById(cid);
 
-  cart.products = cart.products.filter(p => p.product.toString() !== pid);
+  cart.products = cart.products.filter(
+    p => p.product.toString() !== pid
+  );
 
   await cart.save();
 
   res.send({ status: "success", cart });
 });
 
-
-router.put("/:cid", async(req, res) => {
+router.put("/:cid", async (req, res) => {
   const { cid } = req.params;
   const { products } = req.body;
 
-  const cart = await Cart.findByIdAndUpdate(cid, { products }, { new: true });
+  const cart = await Cart.findByIdAndUpdate(
+    cid,
+    { products },
+    { new: true }
+  );
 
   res.send({ status: "success", cart });
 });
 
-
-router.put("/:cid/products/:pid", async(req, res) => {
+router.put("/:cid/products/:pid", async (req, res) => {
   const { cid, pid } = req.params;
   const { quantity } = req.body;
 
   const cart = await Cart.findById(cid);
 
-  const product = cart.products.find(p => p.product.toString() === pid);
+  const product = cart.products.find(
+    p => p.product.toString() === pid
+  );
+
   product.quantity = quantity;
 
   await cart.save();
@@ -42,7 +83,7 @@ router.put("/:cid/products/:pid", async(req, res) => {
 });
 
 
-router.delete("/:cid", async(req, res) => {
+router.delete("/:cid", async (req, res) => {
   const { cid } = req.params;
 
   const cart = await Cart.findById(cid);
@@ -54,10 +95,11 @@ router.delete("/:cid", async(req, res) => {
 });
 
 
-router.get("/:cid", async(req, res) => {
+router.get("/:cid", async (req, res) => {
   const { cid } = req.params;
 
-  const cart = await Cart.findById(cid).populate("products.product");
+  const cart = await Cart.findById(cid)
+    .populate("products.product");
 
   res.send({ status: "success", cart });
 });

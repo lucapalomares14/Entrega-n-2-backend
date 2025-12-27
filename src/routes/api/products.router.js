@@ -10,14 +10,16 @@ router.get("/", async (req, res) => {
     const filter = query ? { category: query } : {};
 
     const options = {
-      limit: parseInt(limit),
-      page: parseInt(page),
-      sort: sort ? { price: sort === "asc" ? 1 : -1 } : {}
+      limit: Number(limit),
+      page: Number(page),
+      sort: sort
+        ? { price: sort === "asc" ? 1 : -1 }
+        : {}
     };
 
     const result = await Product.paginate(filter, options);
 
-    res.send({
+    res.status(200).send({
       status: "success",
       payload: result.docs,
       totalPages: result.totalPages,
@@ -31,11 +33,14 @@ router.get("/", async (req, res) => {
         : null,
       nextLink: result.hasNextPage
         ? `http://localhost:8080/api/products?page=${result.nextPage}`
-        : null,
+        : null
     });
 
   } catch (error) {
-    res.status(500).send({ status: "error", error: error.message });
+    res.status(500).send({
+      status: "error",
+      error: error.message
+    });
   }
 });
 
